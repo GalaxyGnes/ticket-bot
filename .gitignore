@@ -1,0 +1,10 @@
+# Секреты — НИКОГДА не загружать на GitHub
+.env
+*.db
+
+# Python мусор
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/

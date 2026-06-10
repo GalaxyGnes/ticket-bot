@@ -21,3 +21,12 @@ CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "30"))
 
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не найден! Проверь файл .env")
+
+#пакеты кредитов за звёзды
+CREDIT_PACKAGES = [
+    {"credits": 1, "stars": 30,  "label": "1 мониторинг — 30 ⭐"},
+    {"credits": 3, "stars": 80,  "label": "3 мониторинга — 80 ⭐"},
+    {"credits": 5, "stars": 125, "label": "5 мониторингов — 125 ⭐"},
+]
+
+SUPPORT_USERNAME = "GalaxyGnes"  # например "GnesSupport"

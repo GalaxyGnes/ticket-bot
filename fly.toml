@@ -1,5 +1,5 @@
 app = "ticket-bot-zi0rga"
-primary_region = "fra"
+primary_region = "arn"
 
 [build]
 
@@ -15,4 +15,7 @@ primary_region = "fra"
   memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
-  count = 1
+
+[[mounts]]
+  source = "bot_data"
+  destination = "/data"

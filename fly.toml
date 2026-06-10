@@ -1,0 +1,12 @@
+app = "ticket-bot-zi0rga"
+primary_region = "fra"
+
+[build]
+
+[env]
+  CHECK_INTERVAL = "60"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

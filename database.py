@@ -10,37 +10,37 @@ import logging
 DB_PATH = "bot_database.db"
 
 async def init_db():
-    """Создаёт таблицы при первом запуске"""
     async with aiosqlite.connect(DB_PATH) as db:
-
-        # Таблица пользователей
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id     INTEGER PRIMARY KEY,
                 username    TEXT,
                 full_name   TEXT,
-                credits     INTEGER DEFAULT 0,   -- количество мониторингов
+                credits     INTEGER DEFAULT 0,
                 is_active   INTEGER DEFAULT 1,
+                referred_by INTEGER DEFAULT NULL,
                 created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-
-        # Таблица задач мониторинга (что конкретно отслеживать)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS monitors (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id     INTEGER,
-                train_num   TEXT,       -- номер поезда, например "748Б"
-                from_city   TEXT,       -- откуда, например "Минск"
-                to_city     TEXT,       -- куда, например "Брест"
-                date        TEXT,       -- дата отправления "2025-06-15"
-                wagon_type  TEXT,       -- тип вагона: "К" купе, "П" плацкарт и т.д.
+                train_num   TEXT,
+                from_city   TEXT,
+                to_city     TEXT,
+                date        TEXT,
+                wagon_type  TEXT,
                 is_active   INTEGER DEFAULT 1,
                 created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(user_id)
             )
         """)
-
+        # Добавляем колонку если её ещё нет (для старых баз данных)
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL")
+        except Exception:
+            pass  # колонка уже есть
         await db.commit()
         logging.info("База данных инициализирована")
 
@@ -141,3 +141,41 @@ async def deactivate_monitor(monitor_id: int):
             (monitor_id,)
         )
         await db.commit()
+
+async def deactivate_user(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE users SET is_active = 0 WHERE user_id = ?", (user_id,))
+        await db.commit()
+        logging.info(f"Пользователь {user_id} деактивирован")
+
+async def get_all_users():
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT user_id, full_name, username, credits FROM users WHERE is_active = 1 ORDER BY created_at DESC"
+        ) as cursor:
+            return await cursor.fetchall()
+
+
+async def deactivate_user(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE users SET is_active = 0 WHERE user_id = ?", (user_id,))
+        await db.commit()
+        logging.info(f"Пользователь {user_id} деактивирован")
+
+async def get_user_by_ref(ref_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM users WHERE user_id = ?", (ref_id,)
+        ) as cursor:
+            return await cursor.fetchone()
+
+
+async def get_user_referrals(user_id: int) -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute(
+            "SELECT COUNT(*) FROM users WHERE referred_by = ?", (user_id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0        

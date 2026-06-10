@@ -7,7 +7,8 @@
 import aiosqlite
 import logging
 
-DB_PATH = "bot_database.db"
+import os
+DB_PATH = os.getenv("DB_PATH", "/data/bot_database.db")
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
